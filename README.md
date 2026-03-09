@@ -7,7 +7,7 @@ Swoole-based object pool, connection pool
 ## Installation
 
 ```
-composer require mix/object-pool
+composer require haoa/object-pool
 ```
 
 ## License

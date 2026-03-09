@@ -49,6 +49,12 @@ abstract class AbstractObjectPool
     protected $waitTimeout = 0.0;
 
     /**
+     * 归还连接超时时间
+     * @var float
+     */
+    protected $returnTimeout = 0.1;
+
+    /**
      * 连接队列
      * @var Channel
      */
@@ -68,13 +74,14 @@ abstract class AbstractObjectPool
      * @param int $maxLifetime
      * @param float $waitTimeout
      */
-    public function __construct(DialerInterface $dialer, int $maxOpen = -1, int $maxIdle = -1, int $maxLifetime = 0, float $waitTimeout = 0.0)
+    public function __construct(DialerInterface $dialer, int $maxOpen = -1, int $maxIdle = -1, int $maxLifetime = 0, float $waitTimeout = 0.0, float $returnTimeout = 0.1)
     {
         $this->dialer = $dialer;
         $this->maxOpen = $maxOpen;
         $this->maxIdle = $maxIdle;
         $this->maxLifetime = $maxLifetime;
         $this->waitTimeout = $waitTimeout;
+        $this->returnTimeout = $returnTimeout;
         // 默认连接池数量等于 cpu 数量
         if ($maxOpen == -1) {
             $this->maxOpen = swoole_cpu_num();
@@ -200,7 +207,10 @@ abstract class AbstractObjectPool
         if (Coroutine::getCid() == -1) {
             return false;
         }
-        return $this->queue->push($connection, 5);
+        if ($this->getIdleNumber() < $this->maxIdle) {
+            return $this->queue->push($connection, $this->returnTimeout);
+        }
+        return true;
     }
 
     /**
