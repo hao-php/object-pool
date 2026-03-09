@@ -1,21 +1,8 @@
 {
-  "name": "mix/object-pool",
+  "name": "haoa/object-pool",
   "description": "Swoole-based object pool, connection pool",
   "type": "library",
-  "keywords": [
-    "mix",
-    "swoole",
-    "object-pool",
-    "connection-pool"
-  ],
-  "homepage": "https://openmix.org/mix-php",
   "license": "Apache-2.0",
-  "authors": [
-    {
-      "name": "liu,jian",
-      "email": "coder.keda@gmail.com"
-    }
-  ],
   "require": {
     "php": ">=7.2.0"
   },
