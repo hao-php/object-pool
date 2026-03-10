@@ -1,15 +1,15 @@
 <?php
 
-namespace Mix\ObjectPool;
+namespace Haoa\ObjectPool;
 
-use Mix\ObjectPool\Exception\WaitTimeoutException;
+use Haoa\ObjectPool\Exception\WaitTimeoutException;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Swoole\Exception;
 
 /**
  * Class AbstractObjectPool
- * @package Mix\ObjectPool
+ * @package Haoa\ObjectPool
  */
 abstract class AbstractObjectPool
 {

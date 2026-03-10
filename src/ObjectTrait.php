@@ -1,10 +1,10 @@
 <?php
 
-namespace Mix\ObjectPool;
+namespace Haoa\ObjectPool;
 
 /**
  * Trait ObjectTrait
- * @package Mix\ObjectPool
+ * @package Haoa\ObjectPool
  */
 trait ObjectTrait
 {

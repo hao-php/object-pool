@@ -1,10 +1,10 @@
 <?php
 
-namespace Mix\ObjectPool;
+namespace Haoa\ObjectPool;
 
 /**
  * Interface DialerInterface
- * @package Mix\ObjectPool
+ * @package Haoa\ObjectPool
  */
 interface DialerInterface
 {

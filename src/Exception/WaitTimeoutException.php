@@ -1,10 +1,10 @@
 <?php
 
-namespace Mix\ObjectPool\Exception;
+namespace Haoa\ObjectPool\Exception;
 
 /**
  * Class WaitTimeoutException
- * @package Mix\ObjectPool\Exception
+ * @package Haoa\ObjectPool\Exception
  */
 class WaitTimeoutException extends \RuntimeException
 {
