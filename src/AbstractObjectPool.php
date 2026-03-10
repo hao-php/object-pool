@@ -49,10 +49,10 @@ abstract class AbstractObjectPool
     protected $waitTimeout = 0.0;
 
     /**
-     * 归还连接超时时间
+     * 放入连接超时时间
      * @var float
      */
-    protected $returnTimeout = 0.1;
+    protected $pushTimeout = 0.1;
 
     /**
      * 连接队列
@@ -81,7 +81,7 @@ abstract class AbstractObjectPool
         $this->maxIdle = $maxIdle;
         $this->maxLifetime = $maxLifetime;
         $this->waitTimeout = $waitTimeout;
-        $this->returnTimeout = $returnTimeout;
+        $this->pushTimeout = $returnTimeout;
         // 默认连接池数量等于 cpu 数量
         if ($maxOpen == -1) {
             $this->maxOpen = swoole_cpu_num();
@@ -208,7 +208,7 @@ abstract class AbstractObjectPool
             return false;
         }
         if ($this->getIdleNumber() < $this->maxIdle) {
-            return $this->queue->push($connection, $this->returnTimeout);
+            return $this->queue->push($connection, $this->pushTimeout);
         }
         return true;
     }
