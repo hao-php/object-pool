@@ -10,5 +10,8 @@
     "psr-4": {
       "Haoa\\ObjectPool\\": "src/"
     }
+  },
+  "scripts": {
+    "test": "php tests/run.php"
   }
 }

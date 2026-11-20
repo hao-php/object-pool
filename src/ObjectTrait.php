@@ -19,6 +19,9 @@ trait ObjectTrait
      */
     public $createTime = 0;
 
+    /** @var int 最近归还时间，借用中为零，单位秒 */
+    public $lastReturnTime = 0;
+
     /**
      * 丢弃连接
      * @return bool

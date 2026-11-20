@@ -10,9 +10,14 @@ use Swoole\Exception;
 /**
  * Class AbstractObjectPool
  * @package Haoa\ObjectPool
+ *
+ * 无锁版本 - 高性能，max_open 作为软限制
+ * 适用场景：大多数业务场景，追求简单和性能
  */
 abstract class AbstractObjectPool
 {
+
+    use IdleCleanupTrait;
 
     /**
      * 拨号器
@@ -68,18 +73,21 @@ abstract class AbstractObjectPool
 
     /**
      * AbstractObjectPool constructor.
-     * @param DialerInterface $dialer
-     * @param int $maxOpen
-     * @param int $maxIdle
-     * @param int $maxLifetime
-     * @param float $waitTimeout
+     * @param DialerInterface $dialer 连接拨号器
+     * @param int $maxOpen 最大连接数
+     * @param int $maxIdle 最大空闲连接数
+     * @param int $maxLifetime 最大生命周期，单位秒，零表示不限
+     * @param float $waitTimeout 借用等待时间，单位秒，零表示不限
+     * @param float $returnTimeout 归还等待时间，单位秒
+     * @param int $maxIdleTime 最大空闲时间，单位秒，非正数表示不限
      */
-    public function __construct(DialerInterface $dialer, int $maxOpen = -1, int $maxIdle = -1, int $maxLifetime = 0, float $waitTimeout = 0.0, float $returnTimeout = 0.1)
+    public function __construct(DialerInterface $dialer, int $maxOpen = -1, int $maxIdle = -1, int $maxLifetime = 0, float $waitTimeout = 0.0, float $returnTimeout = 0.1, int $maxIdleTime = 0)
     {
         $this->dialer = $dialer;
         $this->maxOpen = $maxOpen;
         $this->maxIdle = $maxIdle;
         $this->maxLifetime = $maxLifetime;
+        $this->maxIdleTime = max(0, $maxIdleTime);
         $this->waitTimeout = $waitTimeout;
         $this->pushTimeout = $returnTimeout;
         // 默认连接池数量等于 cpu 数量
@@ -105,6 +113,7 @@ abstract class AbstractObjectPool
             $connection = $this->dialer->dial();
             $connection->pool = $this;
             $connection->createTime = time();
+            $connection->lastReturnTime = $connection->createTime;
             return $connection;
         };
         $id = spl_object_hash($closure);
@@ -137,13 +146,14 @@ abstract class AbstractObjectPool
         $id = spl_object_hash($connection);
         $this->actives[$id] = ''; // 不可保存外部连接的引用，否则导致外部连接不析构
 
-        // 检查最大生命周期
-        if ($this->maxLifetime && $connection->createTime + $this->maxLifetime <= time()) {
-            $this->discard($connection);
+        // 检查最大生命周期和空闲时间
+        if ($this->isLifetimeExpired($connection) || $this->isIdleExpired($connection)) {
+            $this->replaceExpiredConnection($connection);
             return $this->borrow();
         }
 
         // 返回
+        $connection->lastReturnTime = 0;
         return $connection;
     }
 
@@ -161,6 +171,12 @@ abstract class AbstractObjectPool
         }
         // 移除登记
         unset($this->actives[$id]); // 注意：必须是先减 actives，否则会 maxActive - maxIdle <= 1 时会阻塞
+        $connection->lastReturnTime = time();
+        // 已完成本次使用，空闲且到期时关闭；有等待者时交付后由借用检查替换。
+        if ($this->shouldCleanupOnReturn($connection)) {
+            $this->closeIdleConnection($connection);
+            return true;
+        }
         // 入列
         return $this->push($connection);
     }
